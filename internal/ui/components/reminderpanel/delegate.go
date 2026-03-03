@@ -89,9 +89,10 @@ func (d Delegate) Render(w io.Writer, m list.Model, index int, listItem list.Ite
 }
 
 func formatDueDate(t time.Time) string {
+	t = t.Local()
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	due := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	due := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, now.Location())
 
 	days := int(due.Sub(today).Hours() / 24)
 	var dateStr string
@@ -119,9 +120,10 @@ func formatDueDate(t time.Time) string {
 }
 
 func isOverdue(t time.Time) bool {
+	t = t.Local()
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	due := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	due := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, now.Location())
 	return due.Before(today)
 }
 

@@ -94,7 +94,7 @@ func (m *CreateModel) ShowEdit(r reminders.Reminder) {
 	m.notesInput.SetValue(r.Notes)
 
 	if r.DueDate != nil {
-		m.dueDateInput.SetValue(r.DueDate.Format("2006-01-02 15:04"))
+		m.dueDateInput.SetValue(r.DueDate.Local().Format("2006-01-02 15:04"))
 	} else {
 		m.dueDateInput.SetValue("")
 	}
