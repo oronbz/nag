@@ -1,0 +1,14 @@
+# Binary
+nag
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+
+# Claude
+.claude/
