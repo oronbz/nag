@@ -39,28 +39,28 @@ func NewCreate() CreateModel {
 	ti := textinput.New()
 	ti.Placeholder = "Buy groceries"
 	ti.CharLimit = 256
-	ti.Width = 44
+	ti.Width = 58
 	ti.Prompt = "Title:    "
 	ti.PromptStyle = lipgloss.NewStyle().Foreground(styles.Teal)
 
 	ni := textinput.New()
 	ni.Placeholder = "Optional notes"
 	ni.CharLimit = 1024
-	ni.Width = 44
+	ni.Width = 58
 	ni.Prompt = "Notes:    "
 	ni.PromptStyle = lipgloss.NewStyle().Foreground(styles.Teal)
 
 	di := textinput.New()
 	di.Placeholder = "today, tomorrow, 2025-03-15, 2025-03-15 14:30"
 	di.CharLimit = 32
-	di.Width = 44
+	di.Width = 58
 	di.Prompt = "Due date: "
 	di.PromptStyle = lipgloss.NewStyle().Foreground(styles.Teal)
 
 	pi := textinput.New()
 	pi.Placeholder = "none, low, medium, high"
 	pi.CharLimit = 16
-	pi.Width = 44
+	pi.Width = 58
 	pi.Prompt = "Priority: "
 	pi.PromptStyle = lipgloss.NewStyle().Foreground(styles.Teal)
 

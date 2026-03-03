@@ -66,7 +66,7 @@ var (
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(Teal).
 			Padding(1, 2).
-			Width(55)
+			Width(74)
 
 	DialogTitleStyle = lipgloss.NewStyle().
 				Bold(true).
