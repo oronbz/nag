@@ -62,6 +62,17 @@ func (m *Model) UpdateReminder(updated reminders.Reminder) {
 	m.list.Select(idx)
 }
 
+func (m Model) Reminders() []reminders.Reminder {
+	items := m.list.Items()
+	result := make([]reminders.Reminder, 0, len(items))
+	for _, item := range items {
+		if ri, ok := item.(Item); ok {
+			result = append(result, ri.Reminder)
+		}
+	}
+	return result
+}
+
 func (m Model) SelectedReminder() (reminders.Reminder, bool) {
 	item, ok := m.list.SelectedItem().(Item)
 	if !ok {

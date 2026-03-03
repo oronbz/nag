@@ -85,6 +85,32 @@ func sortReminders(items []Reminder) {
 	})
 }
 
+// ApplySort sorts reminders by the given mode, always keeping incomplete before complete.
+func ApplySort(items []Reminder, mode SortMode) {
+	sort.SliceStable(items, func(i, j int) bool {
+		a, b := items[i], items[j]
+		if a.Completed != b.Completed {
+			return !a.Completed
+		}
+		switch mode {
+		case SortCreated:
+			if a.CreatedAt != nil && b.CreatedAt != nil {
+				return a.CreatedAt.After(*b.CreatedAt)
+			}
+			return a.CreatedAt != nil
+		case SortDueDate:
+			if a.DueDate != nil && b.DueDate != nil {
+				return a.DueDate.Before(*b.DueDate)
+			}
+			return a.DueDate != nil
+		case SortTitle:
+			return a.Title < b.Title
+		default:
+			return false
+		}
+	})
+}
+
 func (c *Client) CreateReminder(input CreateReminderInput) (*Reminder, error) {
 	ekInput := ekreminders.CreateReminderInput{
 		Title:    input.Title,

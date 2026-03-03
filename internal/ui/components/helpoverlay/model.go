@@ -96,6 +96,7 @@ func helpContent() string {
 	sb.WriteString(k.Render("e") + d.Render("Edit reminder / list") + "\n")
 	sb.WriteString(k.Render("d") + d.Render("Delete reminder / list") + "\n")
 	sb.WriteString(k.Render("o") + d.Render("Open in Reminders app") + "\n")
+	sb.WriteString(k.Render("s") + d.Render("Cycle sort order") + "\n")
 	sb.WriteString(k.Render("c") + d.Render("Toggle show completed") + "\n")
 	sb.WriteString(k.Render("r") + d.Render("Refresh current view") + "\n")
 	sb.WriteString(k.Render("/") + d.Render("Filter / search") + "\n")

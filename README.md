@@ -17,6 +17,7 @@ A LazyGit-style terminal UI for [Apple Reminders](https://support.apple.com/guid
 - **Complete/uncomplete** — toggle with Space, 2s grace period to undo
 - **Delete** — with confirmation prompt
 - **Open in Reminders** — jump to the reminder in Apple Reminders
+- **Sort** — cycle between default, created, due date, and title with `s`
 - **Show/hide completed** — toggle visibility with `c`
 - **Auto-refresh** — polls every 10 seconds for external changes
 - **Filter/search** — fuzzy search across titles and notes
@@ -70,6 +71,7 @@ On first run, macOS will prompt for Reminders access. You can manage this in **S
 | `e` | Edit reminder / list |
 | `d` | Delete reminder / list |
 | `o` | Open in Apple Reminders |
+| `s` | Cycle sort order |
 | `c` | Toggle show completed |
 | `r` | Refresh |
 

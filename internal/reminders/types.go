@@ -9,6 +9,32 @@ const (
 	PriorityLow    = 9
 )
 
+type SortMode int
+
+const (
+	SortDefault SortMode = iota
+	SortCreated
+	SortDueDate
+	SortTitle
+)
+
+func (s SortMode) Next() SortMode {
+	return (s + 1) % 4
+}
+
+func (s SortMode) Label() string {
+	switch s {
+	case SortCreated:
+		return "created"
+	case SortDueDate:
+		return "due date"
+	case SortTitle:
+		return "title"
+	default:
+		return "default"
+	}
+}
+
 type ListKind int
 
 const (

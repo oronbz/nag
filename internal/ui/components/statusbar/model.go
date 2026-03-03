@@ -15,10 +15,11 @@ const (
 )
 
 type Model struct {
-	panel   Panel
-	errMsg  string
-	infoMsg string
-	loading string
+	panel     Panel
+	sortLabel string
+	errMsg    string
+	infoMsg   string
+	loading   string
 }
 
 func New() Model {
@@ -43,6 +44,10 @@ func (m *Model) SetLoading(msg string) {
 
 func (m *Model) ClearLoading() {
 	m.loading = ""
+}
+
+func (m *Model) SetSortLabel(label string) {
+	m.sortLabel = label
 }
 
 func (m *Model) SetInfo(msg string) {
@@ -74,11 +79,6 @@ var (
 		{"Tab", "panel"}, {"n", "new"}, {"e", "edit"}, {"d", "delete"},
 		{"/", "filter"}, {"?", "help"}, {"q", "quit"},
 	}
-	remindersHints = []hint{
-		{"↑/k", "up"}, {"↓/j", "down"},
-		{"Tab", "panel"}, {"Space", "toggle"}, {"n", "new"}, {"e", "edit"},
-		{"d", "delete"}, {"c", "completed"}, {"/", "filter"}, {"?", "help"}, {"q", "quit"},
-	}
 )
 
 func (m Model) View() string {
@@ -89,7 +89,15 @@ func (m Model) View() string {
 	case PanelLists:
 		hints = listsHints
 	case PanelReminders:
-		hints = remindersHints
+		sortDesc := "sort"
+		if m.sortLabel != "" {
+			sortDesc = "sort: " + m.sortLabel
+		}
+		hints = []hint{
+			{"↑/k", "up"}, {"↓/j", "down"},
+			{"Tab", "panel"}, {"Space", "toggle"}, {"n", "new"}, {"e", "edit"},
+			{"d", "delete"}, {"s", sortDesc}, {"c", "completed"}, {"/", "filter"}, {"?", "help"}, {"q", "quit"},
+		}
 	}
 
 	var parts []string

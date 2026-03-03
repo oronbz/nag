@@ -18,6 +18,7 @@ type KeyMap struct {
 	Delete          key.Binding
 	OpenInApp       key.Binding
 	ShowCompleted   key.Binding
+	Sort            key.Binding
 	Refresh         key.Binding
 	Filter         key.Binding
 	Help           key.Binding
@@ -85,6 +86,10 @@ var Keys = KeyMap{
 	ShowCompleted: key.NewBinding(
 		key.WithKeys("c"),
 		key.WithHelp("c", "toggle completed"),
+	),
+	Sort: key.NewBinding(
+		key.WithKeys("s"),
+		key.WithHelp("s", "cycle sort"),
 	),
 	Refresh: key.NewBinding(
 		key.WithKeys("r"),

@@ -42,6 +42,7 @@ type Model struct {
 	focusedPanel  Panel
 	selectedList  *reminders.ReminderList
 	showCompleted bool
+	sortMode      reminders.SortMode
 	layout        Layout
 	pendingFocus  bool
 	width         int
@@ -147,6 +148,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		m.statusBar.ClearError()
+		if m.sortMode != reminders.SortDefault {
+			reminders.ApplySort(msg.Reminders, m.sortMode)
+		}
 		m.reminderPanel.SetReminders(msg.Reminders)
 		m.resize()
 		if m.pendingFocus {
@@ -358,6 +362,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case key.Matches(keyMsg, Keys.OpenInApp):
 			return m, m.handleOpenInApp()
+		case key.Matches(keyMsg, Keys.Sort):
+			m.sortMode = m.sortMode.Next()
+			m.statusBar.SetSortLabel(m.sortMode.Label())
+			items := m.reminderPanel.Reminders()
+			reminders.ApplySort(items, m.sortMode)
+			m.reminderPanel.SetReminders(items)
+			m.statusBar.SetInfo("Sort: " + m.sortMode.Label())
+			return m, tea.Tick(2*time.Second, func(time.Time) tea.Msg { return clearInfoMsg{} })
 		case key.Matches(keyMsg, Keys.ShowCompleted):
 			m.showCompleted = !m.showCompleted
 			if m.showCompleted {
