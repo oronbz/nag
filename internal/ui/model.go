@@ -35,6 +35,7 @@ type Model struct {
 	statusBar     statusbar.Model
 	helpOverlay   helpoverlay.Model
 	createDlg     dialog.CreateModel
+	createListDlg dialog.CreateListModel
 	confirmDlg    dialog.ConfirmModel
 	spinner       spinner.Model
 
@@ -63,6 +64,7 @@ func NewModel(client *reminders.Client) Model {
 		statusBar:     statusbar.New(),
 		helpOverlay:   helpoverlay.New(),
 		createDlg:     dialog.NewCreate(),
+		createListDlg: dialog.NewCreateList(),
 		confirmDlg:    dialog.NewConfirm(),
 		spinner:       s,
 		focusedPanel:  PanelLists,
@@ -89,7 +91,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.MouseMsg:
-		if m.createDlg.Visible() || m.confirmDlg.Visible() || m.helpOverlay.Visible() {
+		if m.createDlg.Visible() || m.createListDlg.Visible() || m.confirmDlg.Visible() || m.helpOverlay.Visible() {
 			break
 		}
 		target, ok := m.panelForMouse(msg.X, msg.Y)
@@ -210,12 +212,86 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.statusBar.SetLoading("Creating reminder...")
 		return m, commands.CreateReminder(m.client, msg.Input)
 
+	case dialog.EditSubmitMsg:
+		m.statusBar.SetLoading("Updating reminder...")
+		return m, commands.UpdateReminder(m.client, msg.ID, msg.Input)
+
+	case messages.ReminderUpdatedMsg:
+		m.statusBar.ClearLoading()
+		if msg.Err != nil {
+			m.statusBar.SetError("Update failed: " + msg.Err.Error())
+			return m, nil
+		}
+		m.statusBar.ClearError()
+		m.statusBar.SetInfo("Reminder updated")
+		cmds = append(cmds, tea.Tick(2*time.Second, func(time.Time) tea.Msg { return clearInfoMsg{} }))
+		cmds = append(cmds, commands.FetchLists(m.client))
+		if cmd := m.fetchSelectedReminders(); cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+		return m, tea.Batch(cmds...)
+
+	case dialog.CreateListSubmitMsg:
+		m.statusBar.SetLoading("Creating list...")
+		return m, commands.CreateList(m.client, msg.Title)
+
+	case dialog.EditListSubmitMsg:
+		m.statusBar.SetLoading("Updating list...")
+		return m, commands.UpdateList(m.client, msg.ID, msg.Title)
+
+	case messages.ListUpdatedMsg:
+		m.statusBar.ClearLoading()
+		if msg.Err != nil {
+			m.statusBar.SetError("Update list failed: " + msg.Err.Error())
+			return m, nil
+		}
+		m.statusBar.ClearError()
+		m.statusBar.SetInfo("List updated")
+		return m, tea.Batch(
+			commands.FetchLists(m.client),
+			tea.Tick(2*time.Second, func(time.Time) tea.Msg { return clearInfoMsg{} }),
+		)
+
+	case messages.ListCreatedMsg:
+		m.statusBar.ClearLoading()
+		if msg.Err != nil {
+			m.statusBar.SetError("Create list failed: " + msg.Err.Error())
+			return m, nil
+		}
+		m.statusBar.ClearError()
+		m.statusBar.SetInfo("List created")
+		return m, tea.Batch(
+			commands.FetchLists(m.client),
+			tea.Tick(2*time.Second, func(time.Time) tea.Msg { return clearInfoMsg{} }),
+		)
+
+	case messages.ListDeletedMsg:
+		m.statusBar.ClearLoading()
+		if msg.Err != nil {
+			m.statusBar.SetError("Delete list failed: " + msg.Err.Error())
+			return m, nil
+		}
+		m.statusBar.ClearError()
+		m.statusBar.SetInfo("List deleted")
+		m.selectedList = nil
+		m.reminderPanel.SetReminders(nil)
+		m.reminderPanel.SetTitle("")
+		return m, tea.Batch(
+			commands.FetchLists(m.client),
+			tea.Tick(2*time.Second, func(time.Time) tea.Msg { return clearInfoMsg{} }),
+		)
+
 	case dialog.ConfirmYesMsg:
 		switch msg.Action {
 		case dialog.ConfirmDelete:
 			if r, ok := m.reminderPanel.SelectedReminder(); ok {
 				m.statusBar.SetLoading("Deleting reminder...")
 				return m, commands.DeleteReminder(m.client, r.ID)
+			}
+		case dialog.ConfirmDeleteList:
+			if list, ok := m.listPanel.SelectedList(); ok {
+				m.statusBar.SetLoading("Deleting list...")
+				return m, commands.DeleteList(m.client, list.ID)
 			}
 		}
 		return m, nil
@@ -228,6 +304,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.createDlg.Visible() {
 		var cmd tea.Cmd
 		m.createDlg, cmd = m.createDlg.Update(msg)
+		return m, cmd
+	}
+	if m.createListDlg.Visible() {
+		var cmd tea.Cmd
+		m.createListDlg, cmd = m.createListDlg.Update(msg)
 		return m, cmd
 	}
 	if m.confirmDlg.Visible() {
@@ -267,7 +348,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(keyMsg, Keys.ToggleComplete):
 			return m, m.handleToggleComplete()
 		case key.Matches(keyMsg, Keys.NewReminder):
-			m.handleNewReminder()
+			m.handleNew()
+			return m, nil
+		case key.Matches(keyMsg, Keys.Edit):
+			m.handleEdit()
 			return m, nil
 		case key.Matches(keyMsg, Keys.Delete):
 			m.handleDelete()
@@ -313,6 +397,9 @@ func (m Model) View() string {
 	if m.createDlg.Visible() {
 		return m.createDlg.View()
 	}
+	if m.createListDlg.Visible() {
+		return m.createListDlg.View()
+	}
 	if m.confirmDlg.Visible() {
 		return m.confirmDlg.View()
 	}
@@ -339,6 +426,7 @@ func (m *Model) resize() {
 	m.reminderPanel.SetSize(m.layout.RemindersWidth, m.layout.PanelHeight)
 	m.helpOverlay.SetSize(m.width, m.height)
 	m.createDlg.SetSize(m.width, m.height)
+	m.createListDlg.SetSize(m.width, m.height)
 	m.confirmDlg.SetSize(m.width, m.height)
 }
 
@@ -422,27 +510,64 @@ func (m *Model) handleToggleComplete() tea.Cmd {
 	return nil
 }
 
-func (m *Model) handleNewReminder() {
-	if m.selectedList == nil {
-		m.statusBar.SetInfo("Select a list first")
-		return
+func (m *Model) handleNew() {
+	switch m.focusedPanel {
+	case PanelLists:
+		m.createListDlg.Show()
+	case PanelReminders:
+		if m.selectedList == nil {
+			m.statusBar.SetInfo("Select a list first")
+			return
+		}
+		if m.selectedList.Kind == reminders.ListSmart {
+			m.statusBar.SetInfo("Select a regular list to create reminders")
+			return
+		}
+		m.createDlg.Show(m.selectedList.Title)
 	}
-	if m.selectedList.Kind == reminders.ListSmart {
-		m.statusBar.SetInfo("Select a regular list to create reminders")
-		return
+}
+
+func (m *Model) handleEdit() {
+	switch m.focusedPanel {
+	case PanelLists:
+		list, ok := m.listPanel.SelectedList()
+		if !ok {
+			return
+		}
+		if list.Kind == reminders.ListSmart || list.Kind == reminders.ListSeparator {
+			m.statusBar.SetInfo("Cannot edit smart lists")
+			return
+		}
+		m.createListDlg.ShowEdit(list.ID, list.Title)
+	case PanelReminders:
+		if r, ok := m.reminderPanel.SelectedReminder(); ok {
+			m.createDlg.ShowEdit(r)
+		}
 	}
-	m.createDlg.Show(m.selectedList.Title)
 }
 
 func (m *Model) handleDelete() {
-	if m.focusedPanel != PanelReminders {
-		return
-	}
-	if r, ok := m.reminderPanel.SelectedReminder(); ok {
+	switch m.focusedPanel {
+	case PanelLists:
+		list, ok := m.listPanel.SelectedList()
+		if !ok {
+			return
+		}
+		if list.Kind == reminders.ListSmart || list.Kind == reminders.ListSeparator {
+			m.statusBar.SetInfo("Cannot delete smart lists")
+			return
+		}
 		m.confirmDlg.Show(
-			fmt.Sprintf("Delete \"%s\"?", r.Title),
-			dialog.ConfirmDelete,
+			fmt.Sprintf("Delete list \"%s\" and all its reminders?", list.Title),
+			dialog.ConfirmDeleteList,
 		)
+	case PanelReminders:
+		if r, ok := m.reminderPanel.SelectedReminder(); ok {
+			m.confirmDlg.Show(
+				fmt.Sprintf("Delete \"%s\"?", r.Title),
+				dialog.ConfirmDelete,
+			)
+		}
 	}
 }
 

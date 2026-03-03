@@ -15,13 +15,22 @@ type CreateSubmitMsg struct {
 	Input reminders.CreateReminderInput
 }
 
+type EditSubmitMsg struct {
+	ID    string
+	Input reminders.UpdateReminderInput
+}
+
+const fieldCount = 4
+
 type CreateModel struct {
 	titleInput    textinput.Model
+	notesInput    textinput.Model
 	dueDateInput  textinput.Model
 	priorityInput textinput.Model
 	focusIndex    int
 	visible       bool
 	listName      string
+	editingID     string
 	width         int
 	height        int
 }
@@ -33,6 +42,13 @@ func NewCreate() CreateModel {
 	ti.Width = 44
 	ti.Prompt = "Title:    "
 	ti.PromptStyle = lipgloss.NewStyle().Foreground(styles.Teal)
+
+	ni := textinput.New()
+	ni.Placeholder = "Optional notes"
+	ni.CharLimit = 1024
+	ni.Width = 44
+	ni.Prompt = "Notes:    "
+	ni.PromptStyle = lipgloss.NewStyle().Foreground(styles.Teal)
 
 	di := textinput.New()
 	di.Placeholder = "today, tomorrow, 2025-03-15, 2025-03-15 14:30"
@@ -50,6 +66,7 @@ func NewCreate() CreateModel {
 
 	return CreateModel{
 		titleInput:    ti,
+		notesInput:    ni,
 		dueDateInput:  di,
 		priorityInput: pi,
 	}
@@ -58,18 +75,48 @@ func NewCreate() CreateModel {
 func (m *CreateModel) Show(listName string) {
 	m.visible = true
 	m.listName = listName
+	m.editingID = ""
 	m.focusIndex = 0
 	m.titleInput.SetValue("")
+	m.notesInput.SetValue("")
 	m.dueDateInput.SetValue("")
 	m.priorityInput.SetValue("")
-	m.titleInput.Focus()
-	m.dueDateInput.Blur()
-	m.priorityInput.Blur()
+	m.focusField(0)
+}
+
+func (m *CreateModel) ShowEdit(r reminders.Reminder) {
+	m.visible = true
+	m.editingID = r.ID
+	m.listName = ""
+	m.focusIndex = 0
+
+	m.titleInput.SetValue(r.Title)
+	m.notesInput.SetValue(r.Notes)
+
+	if r.DueDate != nil {
+		m.dueDateInput.SetValue(r.DueDate.Format("2006-01-02 15:04"))
+	} else {
+		m.dueDateInput.SetValue("")
+	}
+
+	switch r.Priority {
+	case reminders.PriorityHigh:
+		m.priorityInput.SetValue("high")
+	case reminders.PriorityMedium:
+		m.priorityInput.SetValue("medium")
+	case reminders.PriorityLow:
+		m.priorityInput.SetValue("low")
+	default:
+		m.priorityInput.SetValue("")
+	}
+
+	m.focusField(0)
 }
 
 func (m *CreateModel) Hide() {
 	m.visible = false
 	m.titleInput.Blur()
+	m.notesInput.Blur()
 	m.dueDateInput.Blur()
 	m.priorityInput.Blur()
 }
@@ -78,9 +125,30 @@ func (m CreateModel) Visible() bool {
 	return m.visible
 }
 
+func (m CreateModel) isEditing() bool {
+	return m.editingID != ""
+}
+
 func (m *CreateModel) SetSize(width, height int) {
 	m.width = width
 	m.height = height
+}
+
+func (m *CreateModel) focusField(index int) {
+	m.titleInput.Blur()
+	m.notesInput.Blur()
+	m.dueDateInput.Blur()
+	m.priorityInput.Blur()
+	switch index {
+	case 0:
+		m.titleInput.Focus()
+	case 1:
+		m.notesInput.Focus()
+	case 2:
+		m.dueDateInput.Focus()
+	case 3:
+		m.priorityInput.Focus()
+	}
 }
 
 func (m CreateModel) Update(msg tea.Msg) (CreateModel, tea.Cmd) {
@@ -95,31 +163,25 @@ func (m CreateModel) Update(msg tea.Msg) (CreateModel, tea.Cmd) {
 			m.Hide()
 			return m, nil
 		case "tab", "shift+tab":
-			m.focusIndex = (m.focusIndex + 1) % 3
-			m.titleInput.Blur()
-			m.dueDateInput.Blur()
-			m.priorityInput.Blur()
-			switch m.focusIndex {
-			case 0:
-				m.titleInput.Focus()
-			case 1:
-				m.dueDateInput.Focus()
-			case 2:
-				m.priorityInput.Focus()
-			}
+			m.focusIndex = (m.focusIndex + 1) % fieldCount
+			m.focusField(m.focusIndex)
 			return m, nil
 		case "enter":
 			title := strings.TrimSpace(m.titleInput.Value())
 			if title == "" {
 				return m, nil
 			}
+			m.Hide()
+			if m.isEditing() {
+				return m, m.buildEditCmd(title)
+			}
 			input := reminders.CreateReminderInput{
 				Title:    title,
 				ListName: m.listName,
+				Notes:    strings.TrimSpace(m.notesInput.Value()),
 				DueDate:  parseDueDate(m.dueDateInput.Value()),
 				Priority: parsePriority(m.priorityInput.Value()),
 			}
-			m.Hide()
 			return m, func() tea.Msg {
 				return CreateSubmitMsg{Input: input}
 			}
@@ -131,11 +193,37 @@ func (m CreateModel) Update(msg tea.Msg) (CreateModel, tea.Cmd) {
 	case 0:
 		m.titleInput, cmd = m.titleInput.Update(msg)
 	case 1:
-		m.dueDateInput, cmd = m.dueDateInput.Update(msg)
+		m.notesInput, cmd = m.notesInput.Update(msg)
 	case 2:
+		m.dueDateInput, cmd = m.dueDateInput.Update(msg)
+	case 3:
 		m.priorityInput, cmd = m.priorityInput.Update(msg)
 	}
 	return m, cmd
+}
+
+func (m CreateModel) buildEditCmd(title string) tea.Cmd {
+	id := m.editingID
+	input := reminders.UpdateReminderInput{
+		Title: &title,
+	}
+
+	notes := strings.TrimSpace(m.notesInput.Value())
+	input.Notes = &notes
+
+	dueDateStr := strings.TrimSpace(m.dueDateInput.Value())
+	if dueDateStr == "" {
+		input.ClearDueDate = true
+	} else {
+		input.DueDate = parseDueDate(dueDateStr)
+	}
+
+	priority := parsePriority(m.priorityInput.Value())
+	input.Priority = &priority
+
+	return func() tea.Msg {
+		return EditSubmitMsg{ID: id, Input: input}
+	}
 }
 
 func (m CreateModel) View() string {
@@ -143,18 +231,26 @@ func (m CreateModel) View() string {
 		return ""
 	}
 
-	title := styles.DialogTitleStyle.Render("New Reminder")
+	dialogTitle := "New Reminder"
+	footer := "Enter: create  Tab: next field  Esc: cancel"
+	if m.isEditing() {
+		dialogTitle = "Edit Reminder"
+		footer = "Enter: save  Tab: next field  Esc: cancel"
+	}
+
+	title := styles.DialogTitleStyle.Render(dialogTitle)
 	content := title + "\n\n" +
 		m.titleInput.View() + "\n\n" +
+		m.notesInput.View() + "\n\n" +
 		m.dueDateInput.View() + "\n\n" +
 		m.priorityInput.View() + "\n\n" +
-		lipgloss.NewStyle().Foreground(styles.DimGray).Render("Enter: create  Tab: next field  Esc: cancel")
+		lipgloss.NewStyle().Foreground(styles.DimGray).Render(footer)
 
-	dialog := styles.DialogStyle.Render(content)
+	dlg := styles.DialogStyle.Render(content)
 
 	return lipgloss.Place(m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		dialog,
+		dlg,
 	)
 }
 

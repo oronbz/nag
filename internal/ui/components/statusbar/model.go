@@ -71,11 +71,12 @@ var (
 
 	listsHints = []hint{
 		{"↑/k", "up"}, {"↓/j", "down"},
-		{"Tab", "panel"}, {"/", "filter"}, {"?", "help"}, {"q", "quit"},
+		{"Tab", "panel"}, {"n", "new"}, {"e", "edit"}, {"d", "delete"},
+		{"/", "filter"}, {"?", "help"}, {"q", "quit"},
 	}
 	remindersHints = []hint{
 		{"↑/k", "up"}, {"↓/j", "down"},
-		{"Tab", "panel"}, {"Space", "toggle"}, {"n", "new"},
+		{"Tab", "panel"}, {"Space", "toggle"}, {"n", "new"}, {"e", "edit"},
 		{"d", "delete"}, {"c", "completed"}, {"/", "filter"}, {"?", "help"}, {"q", "quit"},
 	}
 )

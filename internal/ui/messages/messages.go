@@ -22,8 +22,25 @@ type ReminderCompletedMsg struct {
 	Err      error
 }
 
+type ReminderUpdatedMsg struct {
+	Reminder *reminders.Reminder
+	Err      error
+}
+
 type ReminderDeletedMsg struct {
 	ID  string
+	Err error
+}
+
+type ListCreatedMsg struct {
+	Err error
+}
+
+type ListDeletedMsg struct {
+	Err error
+}
+
+type ListUpdatedMsg struct {
 	Err error
 }
 

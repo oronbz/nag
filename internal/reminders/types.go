@@ -44,3 +44,11 @@ type CreateReminderInput struct {
 	Priority int
 	Notes    string
 }
+
+type UpdateReminderInput struct {
+	Title        *string
+	Notes        *string
+	DueDate      *time.Time
+	ClearDueDate bool
+	Priority     *int
+}

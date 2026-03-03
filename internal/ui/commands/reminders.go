@@ -34,6 +34,13 @@ func CreateReminder(client *reminders.Client, input reminders.CreateReminderInpu
 	}
 }
 
+func UpdateReminder(client *reminders.Client, id string, input reminders.UpdateReminderInput) tea.Cmd {
+	return func() tea.Msg {
+		r, err := client.UpdateReminder(id, input)
+		return messages.ReminderUpdatedMsg{Reminder: r, Err: err}
+	}
+}
+
 func ToggleComplete(client *reminders.Client, id string, currentlyCompleted bool) tea.Cmd {
 	return func() tea.Msg {
 		var r *reminders.Reminder

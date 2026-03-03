@@ -69,8 +69,9 @@ Keybindings (inside TUI):
   Enter                Select list
   Tab / Shift-Tab      Switch panel
   Space / x            Toggle reminder complete
-  n                    Create new reminder
-  d                    Delete reminder (with confirmation)
+  n                    New reminder / list (context-sensitive)
+  e                    Edit reminder / list (context-sensitive)
+  d                    Delete reminder / list (with confirmation)
   o                    Open in Apple Reminders
   c                    Toggle show completed
   r                    Refresh

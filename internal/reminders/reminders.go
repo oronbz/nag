@@ -103,6 +103,31 @@ func (c *Client) CreateReminder(input CreateReminderInput) (*Reminder, error) {
 	return &r, nil
 }
 
+func (c *Client) UpdateReminder(id string, input UpdateReminderInput) (*Reminder, error) {
+	ekInput := ekreminders.UpdateReminderInput{}
+	if input.Title != nil {
+		ekInput.Title = input.Title
+	}
+	if input.Notes != nil {
+		ekInput.Notes = input.Notes
+	}
+	if input.ClearDueDate {
+		ekInput.ClearDueDate = true
+	} else if input.DueDate != nil {
+		ekInput.DueDate = input.DueDate
+	}
+	if input.Priority != nil {
+		p := ekreminders.Priority(*input.Priority)
+		ekInput.Priority = &p
+	}
+	result, err := c.ek.UpdateReminder(id, ekInput)
+	if err != nil {
+		return nil, err
+	}
+	r := convertReminder(*result)
+	return &r, nil
+}
+
 func (c *Client) CompleteReminder(id string) (*Reminder, error) {
 	result, err := c.ek.CompleteReminder(id)
 	if err != nil {

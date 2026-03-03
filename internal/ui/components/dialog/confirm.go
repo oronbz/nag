@@ -10,6 +10,7 @@ type ConfirmAction int
 
 const (
 	ConfirmDelete ConfirmAction = iota
+	ConfirmDeleteList
 )
 
 type ConfirmYesMsg struct{ Action ConfirmAction }

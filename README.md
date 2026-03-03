@@ -6,6 +6,8 @@ A LazyGit-style terminal UI for [Apple Reminders](https://support.apple.com/guid
 ![macOS](https://img.shields.io/badge/macOS-only-000000?logo=apple&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
+![nag screenshot](screenshot.png)
+
 ## Features
 
 - **Two-panel layout** — lists sidebar + reminders
@@ -64,8 +66,9 @@ On first run, macOS will prompt for Reminders access. You can manage this in **S
 | Key | Action |
 |-----|--------|
 | `Space` / `x` | Toggle reminder complete |
-| `n` | Create new reminder |
-| `d` | Delete reminder |
+| `n` | New reminder / list |
+| `e` | Edit reminder / list |
+| `d` | Delete reminder / list |
 | `o` | Open in Apple Reminders |
 | `c` | Toggle show completed |
 | `r` | Refresh |

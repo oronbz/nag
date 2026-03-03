@@ -14,6 +14,7 @@ type KeyMap struct {
 	PageUp         key.Binding
 	ToggleComplete key.Binding
 	NewReminder    key.Binding
+	Edit           key.Binding
 	Delete          key.Binding
 	OpenInApp       key.Binding
 	ShowCompleted   key.Binding
@@ -67,7 +68,11 @@ var Keys = KeyMap{
 	),
 	NewReminder: key.NewBinding(
 		key.WithKeys("n"),
-		key.WithHelp("n", "new reminder"),
+		key.WithHelp("n", "new reminder / list"),
+	),
+	Edit: key.NewBinding(
+		key.WithKeys("e"),
+		key.WithHelp("e", "edit reminder / list"),
 	),
 	Delete: key.NewBinding(
 		key.WithKeys("d"),
