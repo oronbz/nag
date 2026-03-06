@@ -2,11 +2,12 @@
 
 A LazyGit-style terminal UI for [Apple Reminders](https://support.apple.com/guide/reminders/welcome/mac). Browse lists, view reminders, create, complete, and delete — all from the terminal.
 
+![CI](https://github.com/oronbz/nag/actions/workflows/ci.yaml/badge.svg)
 ![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go&logoColor=white)
 ![macOS](https://img.shields.io/badge/macOS-only-000000?logo=apple&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-![nag screenshot](screenshot.png)
+![nag demo](demo.gif)
 
 ## Features
 
@@ -25,18 +26,26 @@ A LazyGit-style terminal UI for [Apple Reminders](https://support.apple.com/guid
 
 ## Install
 
+### Homebrew (recommended)
+
+```bash
+brew install oronbz/tap/nag
+```
+
+### Go install
+
 Requires [Go 1.25+](https://go.dev/dl/) and **macOS** (uses native EventKit via cgo):
 
 ```bash
 go install github.com/oronbz/nag@latest
 ```
 
-Or build from source:
+### From source
 
 ```bash
 git clone https://github.com/oronbz/nag.git
 cd nag
-make build
+make install
 ```
 
 ## Usage

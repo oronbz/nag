@@ -1,4 +1,6 @@
-.PHONY: build run clean release
+PREFIX ?= /usr/local
+
+.PHONY: build run clean install release
 
 LDFLAGS = -ldflags "-X main.version=$$(git describe --tags --always --dirty 2>/dev/null || echo dev)"
 
@@ -7,6 +9,10 @@ build:
 
 run:
 	go run $(LDFLAGS) .
+
+install: build
+	install -d $(DESTDIR)$(PREFIX)/bin
+	install -m 755 nag $(DESTDIR)$(PREFIX)/bin/nag
 
 clean:
 	rm -f nag

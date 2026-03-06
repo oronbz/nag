@@ -10,5 +10,8 @@ nag
 # OS
 .DS_Store
 
+# Release
+dist/
+
 # Claude
 .claude/
