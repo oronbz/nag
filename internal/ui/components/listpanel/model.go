@@ -44,7 +44,7 @@ func (d Delegate) Render(w io.Writer, m list.Model, index int, listItem list.Ite
 
 	if rl.Kind == reminders.ListSeparator {
 		sep := styles.ReminderDimStyle.Render(strings.Repeat("─", m.Width()))
-		fmt.Fprint(w, "\n"+sep)
+		_, _ = fmt.Fprint(w, "\n"+sep)
 		return
 	}
 
@@ -84,7 +84,7 @@ func (d Delegate) Render(w io.Writer, m list.Model, index int, listItem list.Ite
 	}
 
 	style = style.MaxWidth(m.Width())
-	fmt.Fprint(w, style.Render(line1+"\n"+line2))
+	_, _ = fmt.Fprint(w, style.Render(line1+"\n"+line2))
 }
 
 type Model struct {

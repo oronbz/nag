@@ -85,7 +85,7 @@ func (d Delegate) Render(w io.Writer, m list.Model, index int, listItem list.Ite
 	}
 	style = style.MaxWidth(m.Width())
 
-	fmt.Fprint(w, style.Render(line1+"\n"+line2))
+	_, _ = fmt.Fprint(w, style.Render(line1+"\n"+line2))
 }
 
 func formatDueDate(t time.Time) string {
